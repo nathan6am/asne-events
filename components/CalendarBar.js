@@ -24,12 +24,15 @@ function DateTab({ date, activeDate, setActiveDate }) {
   );
 }
 
-export default function CalendarBar({ start, end, onChange }) {
-  const [activeDate, setActiveDate] = useState(start);
+export default function CalendarBar({
+  start,
+  end,
+  onChange,
+  activeDate,
+  setActiveDate,
+}) {
   const dates = generateCalendarStrip(start, end);
-  useEffect(() => {
-    onChange(activeDate);
-  }, [activeDate]);
+
   return (
     <View
       style={{
