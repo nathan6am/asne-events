@@ -1,13 +1,18 @@
 import { createMaterialBottomTabNavigator } from "@react-navigation/material-bottom-tabs";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import EventStack from "./EventStack";
 import { Ionicons, FontAwesome5 } from "@expo/vector-icons";
 import NetworkingScreen from "../screens/NetworkingScreen";
 import ProfileScreen from "../screens/ProfileScreen";
-const Tab = createMaterialBottomTabNavigator();
+import EventListStack from "./EventListStack";
+const Tab = createBottomTabNavigator();
 
 export default function BottomTabs() {
   return (
-    <Tab.Navigator barStyle={{ backgroundColor: "#0b3d78" }}>
+    <Tab.Navigator
+      screenOptions={{ headerShown: false, tabBarHideOnKeyboard: true }}
+      barStyle={{ backgroundColor: "#0b3d78" }}
+    >
       <Tab.Screen
         options={{
           tabBarIcon: ({ color }) => (
@@ -15,7 +20,7 @@ export default function BottomTabs() {
           ),
         }}
         name="Home"
-        component={EventStack}
+        component={EventListStack}
       />
       <Tab.Screen
         options={{

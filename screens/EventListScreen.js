@@ -12,10 +12,12 @@ import { eventsApi } from "../redux/eventsApi";
 import { separateEventsByMonth } from "../util/dataSort";
 import { getOrdinalRange } from "../util/dateUtil";
 import { ActivityIndicator } from "react-native-paper";
+import Loading from "../components/Loading";
 
 function EventSections({ sections, refetch, isLoading, toDashboard }) {
   return (
     <SectionList
+      style={{ paddingTop: 16 }}
       onRefresh={refetch}
       refreshing={isLoading}
       sections={sections}
@@ -40,10 +42,11 @@ function EventCard({ event, toDashboard }) {
       <View
         style={{
           backgroundColor: "white",
-          marginVertical: 16,
           marginHorizontal: 8,
+          marginVertical: 16,
           borderRadius: 6,
           paddingBottom: 16,
+          elevation: 5,
           boxWithShadow: {
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
@@ -90,14 +93,17 @@ export default function EventListScreen({ navigation }) {
   const { refetch } = eventsApi.endpoints.getAllEvents.useQuerySubscription();
   const [eventData, setEventData] = useState([]);
   const toEventDashboard = (event) => {
-    navigation.navigate("Dashboard", {
+    navigation.navigate("EventStack", {
       eventid: event._id,
       nameShort: event.nameShort,
     });
   };
   useEffect(() => {
     if (isLoading) return;
-    if (error) return;
+    if (error) {
+      console.log(error);
+      return;
+    }
     if (!data) return;
     const separated = separateEventsByMonth(data.events);
     setEventData(separated);
@@ -105,7 +111,7 @@ export default function EventListScreen({ navigation }) {
   return (
     <View style={{ flex: 1 }}>
       {isLoading ? (
-        <ActivityIndicator animating={true} color="#4c97ce" />
+        <Loading />
       ) : (
         <EventSections
           sections={eventData}

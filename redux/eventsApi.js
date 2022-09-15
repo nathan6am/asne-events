@@ -8,7 +8,11 @@ export const eventsApi = createApi({
   endpoints: (builder) => ({
     getAllEvents: builder.query({ query: () => "events/" }),
     getEventById: builder.query({ query: (eventid) => `events/${eventid}` }),
+    getEventSessions: builder.query({
+      query: (eventid) => `events/${eventid}/sessions/`,
+    }),
   }),
 });
 
-export const { useGetAllEvents, useGetEventById } = eventsApi;
+export const { useGetAllEvents, useGetEventById, useGetEventSessions } =
+  eventsApi;
