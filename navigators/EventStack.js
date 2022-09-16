@@ -33,7 +33,11 @@ export default function EventStack({ route }) {
       <Stack.Screen name="Sponsors" component={SponsorScreen} />
       <Stack.Screen name="Venue" component={VenueDetailsScreen} />
       <Stack.Screen name="Venue Map" component={VenueMap} />
-      <Stack.Screen name="Session Details" component={SessionDetailsScreen} />
+      <Stack.Screen
+        name="Session Details"
+        component={SessionDetailsScreen}
+        options={{ presentation: "modal" }}
+      />
       <Stack.Screen
         name="Exhibitors"
         component={ExhibitorsScreen}

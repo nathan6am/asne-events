@@ -13,15 +13,16 @@ export default function VenueDetailsScreen({ route, navigation }) {
         source={{ uri: venue.imageUrl }}
         resizeMode="cover"
       />
-      <Pressable
-        onPress={() => {
-          navigation.navigate("Venue Map", { venue: venue });
-        }}
-      >
-        <Text>View Venue Map</Text>
-      </Pressable>
-      <Text>{venue.name}</Text>
+
+      <Text style={styles.title}>{venue.name}</Text>
     </View>
   );
 }
-const styles = StyleSheet.create({});
+const styles = StyleSheet.create({
+  title: {
+    fontSize: 20,
+    color: "#4c97ce",
+    fontFamily: "sans-serif-medium",
+    padding: 8,
+  },
+});

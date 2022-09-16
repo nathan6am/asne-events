@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     paddingVertical: 16,
+    backgroundColor: "white",
   },
   item: {
     flexBasis: "25%",

@@ -30,7 +30,15 @@ function formatSessions(sessions) {
     return 1;
   });
 }
-function SessionCard({ session, inAgenda, addItem, removeItem, eventid }) {
+
+function SessionCard({
+  session,
+  inAgenda,
+  addItem,
+  removeItem,
+  eventid,
+  venue,
+}) {
   const timeRange = `${dayjs(session.startTime).format("h:mm A")} - ${dayjs(
     session.endTime
   ).format("h:mm A")}`;
@@ -39,12 +47,21 @@ function SessionCard({ session, inAgenda, addItem, removeItem, eventid }) {
     <View style={styles.agendaCard}>
       <Pressable
         onPress={() => {
-          navigation.navigate("Session Details", { session: session });
+          navigation.navigate("Session Details", {
+            session: session,
+            venue: venue,
+          });
         }}
       >
-        <View style={{ flexDirection: "row" }}>
-          <View style={{ flexGrow: 1 }}>
-            <Text style={styles.sessionTitle}>{session.name}</Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+          <View style={{ width: "85%" }}>
+            <Text
+              ellipsizeMode="tail"
+              numberOfLines={2}
+              style={styles.sessionTitle}
+            >
+              {session.name}
+            </Text>
             <View style={styles.detailRow}>
               <Ionicons
                 name="time"
@@ -67,6 +84,7 @@ function SessionCard({ session, inAgenda, addItem, removeItem, eventid }) {
           <Pressable
             style={{
               width: 30,
+              flexGrow: 1,
               justifyContent: "center",
               alignItems: "flex-end",
               paddingEnd: 4,
@@ -96,6 +114,7 @@ function SessionList({
   addItem,
   removeItem,
   eventid,
+  venue,
 }) {
   return (
     <SectionList
@@ -110,6 +129,7 @@ function SessionList({
           }
           addItem={addItem}
           removeItem={removeItem}
+          venue={venue}
         />
       )}
       renderSectionHeader={({ section: { title } }) => (
@@ -119,31 +139,24 @@ function SessionList({
   );
 }
 
-export default function Agenda({ sessions, activeDate, eventid }) {
+export default function Agenda({ sessions, date, eventid, event }) {
   const dispatch = useDispatch();
   const localEventData = useSelector((state) => state.events).find(
     (event) => event.id === eventid
   );
-  useEffect(() => {
-    console.log(localEventData);
-  }, []);
-
   const mySessions = localEventData && localEventData.myAgenda;
-  const filterSessions = () => {
+  const venue = event.venue;
+  const filterSessions = (tags) => {
     const filtered = sessions.filter((session) => {
-      return isSameDay(session.startTime, activeDate);
+      return isSameDay(session.startTime, date);
     });
     setSessionsToDisplay(formatSessions(filtered));
   };
 
-  useEffect(() => {
-    filterSessions();
-  }, [activeDate]);
-
   const [sessionsToDisplay, setSessionsToDisplay] = useState(
     formatSessions(
       sessions.filter((session) => {
-        return isSameDay(session.startTime, activeDate);
+        return isSameDay(session.startTime, date);
       })
     )
   );
@@ -163,6 +176,7 @@ export default function Agenda({ sessions, activeDate, eventid }) {
         addItem={addItem}
         removeItem={removeItem}
         eventid={eventid}
+        venue={venue}
       />
     </View>
   );

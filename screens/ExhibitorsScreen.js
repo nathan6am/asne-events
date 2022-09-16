@@ -7,6 +7,7 @@ import {
   Keyboard,
   ScrollView,
   Pressable,
+  Modal,
 } from "react-native";
 import { RectButton } from "react-native-gesture-handler";
 import Fuse from "fuse.js";
@@ -15,11 +16,51 @@ import React, { useState, useEffect, useRef } from "react";
 import { TextInput } from "react-native-paper";
 import { SearchBar } from "react-native-elements";
 
-function RenderExhibitor({ exhibitor }) {
+function ExhibitorModal({ exhibitor, hide }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (exhibitor) {
+      setVisible(true);
+    } else {
+      setVisible(false);
+    }
+  }, [exhibitor]);
+  return (
+    <Modal
+      visible={visible}
+      onRequestClose={hide}
+      animationType="fade"
+      transparent={true}
+    >
+      {exhibitor && (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+          }}
+        >
+          <View
+            style={{
+              marginHorizontal: 4,
+              width: "100%",
+              height: 400,
+              backgroundColor: "white",
+            }}
+          >
+            <Text>{exhibitor.name}</Text>
+          </View>
+        </View>
+      )}
+    </Modal>
+  );
+}
+function RenderExhibitor({ exhibitor, setModalData }) {
   return (
     <RectButton
       onPress={() => {
-        console.log(exhibitor);
+        setModalData(exhibitor);
       }}
       style={styles.exhibitorItem}
     >
@@ -33,13 +74,13 @@ function RenderExhibitor({ exhibitor }) {
         <Text style={{ color: "#0b3d78", fontSize: 16 }}>{exhibitor.name}</Text>
       </View>
       <View style={{ padding: 6, justifyContent: "center", opacity: 0.5 }}>
-        <Text>{exhibitor.booths.join(", ")}</Text>
+        <Text>{exhibitor.booths.map((booth) => booth.boothCd).join(", ")}</Text>
       </View>
     </RectButton>
   );
 }
 
-function ExhibitorSections({ exhibitors, query, handleDismiss }) {
+function ExhibitorSections({ exhibitors, query, handleDismiss, setModalData }) {
   const formatResults = (list, query) => {
     let formatted = [];
     if (query) {
@@ -82,7 +123,9 @@ function ExhibitorSections({ exhibitors, query, handleDismiss }) {
       onTouchStart={handleDismiss}
       sections={sections}
       keyExtractor={(item, index) => item._id}
-      renderItem={({ item }) => <RenderExhibitor exhibitor={item} />}
+      renderItem={({ item }) => (
+        <RenderExhibitor exhibitor={item} setModalData={setModalData} />
+      )}
       renderSectionHeader={({ section: { title } }) => (
         <Text style={styles.sectionHeader}>{title}</Text>
       )}
@@ -91,7 +134,11 @@ function ExhibitorSections({ exhibitors, query, handleDismiss }) {
 }
 export default function ExhibitorsScreen({ route }) {
   const exhibitors = route.params.exhibitors;
-  [displayList, setDisplayList] = useState(exhibitors);
+  const [displayList, setDisplayList] = useState(exhibitors);
+  const [modalData, setModalData] = useState(null);
+  const hideModal = () => {
+    setModalData(null);
+  };
   const inputRef = useRef(null);
   const handleDismiss = () => {
     Keyboard.dismiss();
@@ -129,6 +176,7 @@ export default function ExhibitorsScreen({ route }) {
           setDisplayList(exhibitors);
         }}
       />
+      <ExhibitorModal exhibitor={modalData} hide={hideModal} />
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();
@@ -139,6 +187,7 @@ export default function ExhibitorsScreen({ route }) {
           exhibitors={displayList}
           query={query}
           handleDismiss={handleDismiss}
+          setModalData={setModalData}
         />
       </TouchableWithoutFeedback>
     </View>
