@@ -6,7 +6,7 @@ import { eventsApi } from "../redux/eventsApi";
 import Agenda from "../components/Agenda";
 import { TabView } from "react-native-tab-view";
 import Loading from "../components/Loading";
-
+import { RectButton } from "react-native-gesture-handler";
 //UTIL
 import { generateCalendarStrip } from "../util/dateUtil";
 import dayjs from "dayjs";
@@ -31,12 +31,14 @@ export default function AgendaScreen({ route }) {
   //CONSTANTS
   const layout = useWindowDimensions();
   const event = route.params.event;
+
   const eventid = route.params.event._id;
   const routes = getTabRoutes(event.startDate, event.endDate);
 
   //COMPONENT STATE
   const [activeDate, setActiveDate] = useState(event.startDate);
   const [tabIdx, setTabIdx] = useState(0);
+  const [showMyAgenda, setShowMyAgenda] = useState(false);
 
   //Session data from Api
   const { data, error, isLoading } =
@@ -56,6 +58,7 @@ export default function AgendaScreen({ route }) {
         date={date}
         eventid={eventid}
         event={event}
+        isMyAgenda={showMyAgenda}
       />
     );
   };
@@ -68,6 +71,14 @@ export default function AgendaScreen({ route }) {
 
   return (
     <View style={{ flex: 1 }}>
+      <RectButton
+        onPress={() => {
+          setShowMyAgenda(!showMyAgenda);
+        }}
+        style={{ height: 40 }}
+      >
+        <Text>Toggle</Text>
+      </RectButton>
       <CalendarBar
         start={event.startDate}
         end={event.endDate}

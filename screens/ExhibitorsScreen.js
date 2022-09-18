@@ -13,10 +13,37 @@ import { RectButton } from "react-native-gesture-handler";
 import Fuse from "fuse.js";
 
 import React, { useState, useEffect, useRef } from "react";
-import { TextInput } from "react-native-paper";
 import { SearchBar } from "react-native-elements";
+import CachedImage from "react-native-expo-cached-image";
+import ReactNativeZoomableView from "@openspacelabs/react-native-zoomable-view/src/ReactNativeZoomableView";
 
-function ExhibitorModal({ exhibitor, hide }) {
+function splitBooths(exhibitors) {
+  let booths = [];
+  exhibitors.forEach((exhibitor) => {
+    exhibitor.booths.forEach((booth) => booths.push(booth));
+  });
+  console.log(booths[0].location);
+  return booths;
+}
+function RenderBooth({ booth, highlight }) {
+  return (
+    <View
+      style={{
+        width: 48,
+        height: 48,
+        backgroundColor: highlight ? "blue" : "red",
+        position: "absolute",
+        zIndex: 10,
+        top: booth.location.top,
+        left: booth.location.left,
+      }}
+    >
+      <Text>{booth.boothCd}</Text>
+    </View>
+  );
+}
+function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
+  const booths = splitBooths(exhibitors);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (exhibitor) {
@@ -38,18 +65,71 @@ function ExhibitorModal({ exhibitor, hide }) {
             flex: 1,
             justifyContent: "center",
             alignItems: "center",
-            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backgroundColor: "rgba(0, 0, 0, 0.0)",
           }}
         >
           <View
             style={{
               marginHorizontal: 4,
-              width: "100%",
+              width: "95%",
               height: 400,
+              elevation: 10,
+              borderRadius: 8,
               backgroundColor: "white",
             }}
           >
-            <Text>{exhibitor.name}</Text>
+            <View
+              style={{
+                height: 50,
+                backgroundColor: "#0b3d78",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: "sans-serif-medium",
+                  fontSize: 20,
+                  padding: 8,
+                  color: "white",
+                }}
+              >
+                Exhibitor Info
+              </Text>
+            </View>
+            <Text
+              style={{
+                fontFamily: "sans-serif-medium",
+                fontSize: 18,
+                padding: 8,
+              }}
+            >
+              {exhibitor.name}
+            </Text>
+            <View style={{ height: 300 }}>
+              <ReactNativeZoomableView
+                bindToBorders={true}
+                panBoundaryPadding={1200}
+                initialZoom={0.25}
+                minZoom={0.3}
+                maxZoom={2.0}
+              >
+                <View
+                  style={{
+                    width: map.dimensions.width,
+                    height: map.dimensions.height,
+                  }}
+                >
+                  {booths.map((booth) => (
+                    <RenderBooth booth={booth} key={booth.boothCd} />
+                  ))}
+                  <CachedImage
+                    style={{ width: "100%", height: "100%" }}
+                    source={{ uri: map.url }}
+                  ></CachedImage>
+                </View>
+              </ReactNativeZoomableView>
+            </View>
           </View>
         </View>
       )}
@@ -134,6 +214,7 @@ function ExhibitorSections({ exhibitors, query, handleDismiss, setModalData }) {
 }
 export default function ExhibitorsScreen({ route }) {
   const exhibitors = route.params.exhibitors;
+  const map = route.params.event.exhibitorMap;
   const [displayList, setDisplayList] = useState(exhibitors);
   const [modalData, setModalData] = useState(null);
   const hideModal = () => {
@@ -176,7 +257,12 @@ export default function ExhibitorsScreen({ route }) {
           setDisplayList(exhibitors);
         }}
       />
-      <ExhibitorModal exhibitor={modalData} hide={hideModal} />
+      <ExhibitorModal
+        exhibitor={modalData}
+        hide={hideModal}
+        exhibitors={exhibitors}
+        map={map}
+      />
       <TouchableWithoutFeedback
         onPress={() => {
           Keyboard.dismiss();

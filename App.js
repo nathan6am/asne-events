@@ -4,7 +4,7 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { persistStore } from "redux-persist";
 import { store } from "./redux/store";
-
+import EventListStack from "./navigators/EventListStack";
 let persistor = persistStore(store);
 // In App.js in a new project
 
@@ -16,7 +16,7 @@ export default function App() {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <NavigationContainer>
-          <BottomTabs />
+          <EventListStack />
         </NavigationContainer>
       </PersistGate>
     </Provider>

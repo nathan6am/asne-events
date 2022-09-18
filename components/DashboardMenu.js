@@ -39,7 +39,10 @@ export default function DashboardMenu({ loadAgenda, navigation, event }) {
       </Pressable>
       <Pressable
         onPress={() => {
-          navigation.navigate("Exhibitors", { exhibitors: event.exhibitors });
+          navigation.navigate("Exhibitors", {
+            exhibitors: event.exhibitors,
+            event: event,
+          });
         }}
         style={styles.item}
       >

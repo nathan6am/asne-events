@@ -6,7 +6,7 @@ import { Ionicons } from "react-native-vector-icons";
 import { useSelector, useDispatch } from "react-redux";
 import { addToAgenda, removeFromAgenda } from "../redux/actionCreators";
 import { useNavigation } from "@react-navigation/native";
-
+import SessionTags from "./SessionTags";
 function formatSessions(sessions) {
   let sectionList = [];
   sessions.forEach((session) => {
@@ -80,6 +80,15 @@ function SessionCard({
               />
               <Text style={{ opacity: 0.5 }}>{session.room}</Text>
             </View>
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                marginVertical: 4,
+              }}
+            >
+              <SessionTags tags={session.tags} />
+            </View>
           </View>
           <Pressable
             style={{
@@ -139,18 +148,21 @@ function SessionList({
   );
 }
 
-export default function Agenda({ sessions, date, eventid, event }) {
+export default function Agenda({ sessions, date, eventid, event, isMyAgenda }) {
   const dispatch = useDispatch();
   const localEventData = useSelector((state) => state.events).find(
     (event) => event.id === eventid
   );
   const mySessions = localEventData && localEventData.myAgenda;
   const venue = event.venue;
-  const filterSessions = (tags) => {
-    const filtered = sessions.filter((session) => {
-      return isSameDay(session.startTime, date);
+
+  const filterMyAgenda = (sessions) => {
+    const filtered = sessions.filter((item) => {
+      return (
+        mySessions && mySessions.some((session) => session.id === item._id)
+      );
     });
-    setSessionsToDisplay(formatSessions(filtered));
+    return filtered;
   };
 
   const [sessionsToDisplay, setSessionsToDisplay] = useState(
@@ -160,6 +172,27 @@ export default function Agenda({ sessions, date, eventid, event }) {
       })
     )
   );
+  useEffect(() => {
+    if (isMyAgenda) {
+      setSessionsToDisplay(
+        formatSessions(
+          filterMyAgenda(
+            sessions.filter((session) => {
+              return isSameDay(session.startTime, date);
+            })
+          )
+        )
+      );
+    } else {
+      setSessionsToDisplay(
+        formatSessions(
+          sessions.filter((session) => {
+            return isSameDay(session.startTime, date);
+          })
+        )
+      );
+    }
+  }, [mySessions, isMyAgenda, sessions]);
 
   const addItem = (sessionid) => {
     dispatch(addToAgenda(eventid, sessionid));

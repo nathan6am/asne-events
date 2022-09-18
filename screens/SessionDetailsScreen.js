@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { addToAgenda } from "../redux/actionCreators";
 import { updateNotes } from "../redux/actionCreators";
-import { Ionicons } from "react-native-vector-icons";
+import { Ionicons, Entypo } from "react-native-vector-icons";
+import SessionTags from "../components/SessionTags";
 import {
   Text,
   Platform,
@@ -17,8 +19,9 @@ import {
   RichEditor,
   RichToolbar,
 } from "react-native-pell-rich-editor";
+import { RectButton } from "react-native-gesture-handler";
 import dayjs from "dayjs";
-export default function SessionDetailsScreen({ route }) {
+export default function SessionDetailsScreen({ route, navigation }) {
   const dispatch = useDispatch();
   const session = route.params.session;
   const richText = useRef();
@@ -27,6 +30,10 @@ export default function SessionDetailsScreen({ route }) {
     state.events.find((event) => event.id === session.eventid)
   );
   const initialNotes = currentEvent.sessionNotes[session._id] || "";
+  const inMyAgenda = currentEvent.myAgenda.some(
+    (mysession) => mysession.id === session._id
+  );
+  const venue = route.params.venue;
   const [notes, setNotes] = useState(initialNotes);
   function saveNotes() {
     console.log(notes);
@@ -40,6 +47,7 @@ export default function SessionDetailsScreen({ route }) {
       <View>
         <View style={{ backgroundColor: "white", padding: 16 }}>
           <Text style={styles.title}>{session.name}</Text>
+          <SessionTags style={{ marginBottom: 8 }} tags={session.tags} />
           <Text style={styles.sectionHeader}>Time</Text>
           <View style={styles.contentRow}>
             <View style={styles.detailRow}>
@@ -50,19 +58,6 @@ export default function SessionDetailsScreen({ route }) {
                 style={{ marginRight: 3, marginTop: 1 }}
               />
               <Text style={{ opacity: 0.7 }}>{timeRange}</Text>
-            </View>
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: "rgba(0,0,0,0.5)",
-                padding: 6,
-                borderRadius: 3,
-                marginRight: 8,
-              }}
-            >
-              <Text style={{ opacity: 0.7, marginHorizontal: 8 }}>
-                Add to My Agenda
-              </Text>
             </View>
           </View>
 
@@ -77,19 +72,27 @@ export default function SessionDetailsScreen({ route }) {
               />
               <Text style={{ opacity: 0.7 }}>{session.room}</Text>
             </View>
-            <View
+            <RectButton
+              onPress={() => {
+                navigation.navigate("Venue Map", { venue: venue });
+              }}
               style={{
-                borderWidth: 1,
-                borderColor: "rgba(0,0,0,0.5)",
+                backgroundColor: "#d6eaff",
                 padding: 6,
                 borderRadius: 3,
                 marginRight: 8,
+                flexDirection: "row",
+                paddingHorizontal: 8,
               }}
             >
-              <Text style={{ opacity: 0.7, marginHorizontal: 8 }}>
-                Open Venue Map
-              </Text>
-            </View>
+              <Ionicons
+                name="map"
+                size={16}
+                color={"#4c97ce"}
+                style={{ marginRight: 4, marginTop: 1 }}
+              />
+              <Text style={{ color: "#4c97ce" }}> Venue Map</Text>
+            </RectButton>
           </View>
         </View>
         {session.awards[0] && (
@@ -276,7 +279,7 @@ const styles = StyleSheet.create({
     fontFamily: "sans-serif-medium",
     fontSize: 20,
 
-    marginBottom: 4,
+    marginVertical: 4,
   },
   detailRow: {
     marginVertical: 4,
