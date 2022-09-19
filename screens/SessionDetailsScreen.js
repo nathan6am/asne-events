@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addToAgenda } from "../redux/actionCreators";
+import { addToAgenda, removeFromAgenda } from "../redux/actionCreators";
 import { updateNotes } from "../redux/actionCreators";
-import { Ionicons, Entypo } from "react-native-vector-icons";
+import { Ionicons, Entypo, FontAwesome5 } from "react-native-vector-icons";
 import SessionTags from "../components/SessionTags";
 import {
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   SafeAreaView,
   TouchableWithoutFeedback,
+  Keyboard,
   View,
   ScrollView,
   StyleSheet,
@@ -21,6 +22,7 @@ import {
 } from "react-native-pell-rich-editor";
 import { RectButton } from "react-native-gesture-handler";
 import dayjs from "dayjs";
+import { getOrdinalRange } from "../util/dateUtil";
 export default function SessionDetailsScreen({ route, navigation }) {
   const dispatch = useDispatch();
   const session = route.params.session;
@@ -35,6 +37,15 @@ export default function SessionDetailsScreen({ route, navigation }) {
   );
   const venue = route.params.venue;
   const [notes, setNotes] = useState(initialNotes);
+  function blurEditor() {
+    richText.current?.blurContentEditor();
+  }
+  useEffect(() => {
+    Keyboard.addListener("keyboardDidHide", blurEditor);
+    return () => {
+      Keyboard.removeAllListeners;
+    };
+  }, []);
   function saveNotes() {
     console.log(notes);
     dispatch(updateNotes(session.eventid, session._id, notes));
@@ -42,8 +53,13 @@ export default function SessionDetailsScreen({ route, navigation }) {
   const timeRange = `${dayjs(session.startTime).format("h:mm A")} - ${dayjs(
     session.endTime
   ).format("h:mm A")}`;
+
+  function getTimeRange(start, end) {
+    return `${dayjs(start).format("h:mm A")} - ${dayjs(end).format("h:mm A")}`;
+  }
+  const [scrollOffset, setScrollOffset] = useState(0);
   return (
-    <ScrollView ref={scrollRef} contentContainerStyle={{ flexGrow: 1 }}>
+    <ScrollView ref={scrollRef} contentContainerStyle={{ flexGrow: 1 }}on>
       <View>
         <View style={{ backgroundColor: "white", padding: 16 }}>
           <Text style={styles.title}>{session.name}</Text>
@@ -95,6 +111,49 @@ export default function SessionDetailsScreen({ route, navigation }) {
             </RectButton>
           </View>
         </View>
+        {inMyAgenda ? (
+          <RectButton
+            onPress={() => {
+              dispatch(removeFromAgenda(session.eventid, session._id));
+            }}
+            style={{
+              marginTop: 2,
+              backgroundColor: "white",
+              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <FontAwesome5
+              name="calendar-times"
+              color="red"
+              size={20}
+              style={{ marginRight: 16 }}
+            ></FontAwesome5>
+            <Text>Remove from My Agenda</Text>
+          </RectButton>
+        ) : (
+          <RectButton
+            onPress={() => {
+              dispatch(addToAgenda(session.eventid, session._id));
+            }}
+            style={{
+              marginTop: 2,
+              backgroundColor: "white",
+              padding: 16,
+              flexDirection: "row",
+              alignItems: "center",
+            }}
+          >
+            <FontAwesome5
+              name="calendar-plus"
+              color="#4c97ce"
+              size={20}
+              style={{ marginRight: 16 }}
+            ></FontAwesome5>
+            <Text>Add to My Agenda</Text>
+          </RectButton>
+        )}
         {session.awards[0] && (
           <View>
             <Text
@@ -139,6 +198,50 @@ export default function SessionDetailsScreen({ route, navigation }) {
             ))}
           </View>
         )}
+        {session.presenters[0] && (
+          <View>
+            <Text
+              style={{
+                padding: 8,
+                opacity: 1,
+                alignItems: "center",
+              }}
+            >
+              Presenters:
+            </Text>
+            {session.presenters.map((speaker, idx) => (
+              <View
+                key={idx}
+                style={{
+                  padding: 8,
+                  paddingHorizontal: 19,
+                  backgroundColor: "white",
+
+                  marginVertical: 1,
+                }}
+              >
+                <Text
+                  style={{
+                    marginVertical: 2,
+                    fontFamily: "sans-serif-medium",
+                    fontSize: 16,
+                    color: "#0b3d78",
+                  }}
+                >
+                  {speaker.fullName}
+                </Text>
+                <Text
+                  style={{
+                    marginVertical: 2,
+                    opacity: 0.5,
+                  }}
+                >
+                  {speaker.position}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
         {session.speakers[0] && (
           <View>
             <Text
@@ -150,8 +253,9 @@ export default function SessionDetailsScreen({ route, navigation }) {
             >
               Speakers:
             </Text>
-            {session.speakers.map((speaker) => (
+            {session.speakers.map((speaker, idx) => (
               <View
+                key={idx}
                 style={{
                   padding: 8,
                   paddingHorizontal: 19,
@@ -193,13 +297,13 @@ export default function SessionDetailsScreen({ route, navigation }) {
             >
               Panelists:
             </Text>
-            {session.panelists.map((panelist) => (
+            {session.panelists.map((panelist, idx) => (
               <View
+                key={idx}
                 style={{
                   padding: 8,
                   paddingHorizontal: 19,
                   backgroundColor: "white",
-
                   marginVertical: 1,
                 }}
               >
@@ -225,8 +329,64 @@ export default function SessionDetailsScreen({ route, navigation }) {
             ))}
           </View>
         )}
+        {session.papers[0] && (
+          <View>
+            <Text
+              style={{
+                padding: 8,
+                opacity: 1,
+                alignItems: "center",
+              }}
+            >
+              Papers:
+            </Text>
+            {session.papers.map((paper, idx) => (
+              <View
+                key={idx}
+                style={{
+                  padding: 8,
+                  paddingHorizontal: 19,
+                  backgroundColor: "white",
+                  marginVertical: 1,
+                }}
+              >
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="time"
+                    size={16}
+                    color={"#4c97ce"}
+                    style={{ marginRight: 3, marginTop: 1 }}
+                  />
+                  <Text>{getTimeRange(paper.startTime, paper.endTime)}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text
+                    style={{
+                      color: "#0b3d78",
+                      fontStyle: "italic",
+                      fontSize: 16,
+                    }}
+                  >{`"${paper.title}"`}</Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Ionicons
+                    name="person"
+                    size={16}
+                    color={"#4c97ce"}
+                    style={{ marginRight: 3, marginTop: 1 }}
+                  />
+                  <Text style={{ opacity: 0.5 }}>{paper.author}</Text>
+                </View>
+                <Text>Moderator: {paper.moderator}</Text>
+              </View>
+            ))}
+          </View>
+        )}
 
         <KeyboardAvoidingView
+          onLayout={({ nativeEvent }) => {
+            setScrollOffset(nativeEvent.layout.y);
+          }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ padding: 8 }}
         >
@@ -234,6 +394,12 @@ export default function SessionDetailsScreen({ route, navigation }) {
           <RichEditor
             ref={richText}
             onBlur={saveNotes}
+            onFocus={() => {
+              scrollRef.current.scrollTo({
+                y: scrollOffset + 15,
+                animated: true,
+              });
+            }}
             initialContentHTML={notes}
             androidLayerType="software"
             androidHardwareAccelerationDisabled
@@ -241,7 +407,10 @@ export default function SessionDetailsScreen({ route, navigation }) {
               setNotes(descriptionText);
             }}
             onCursorPosition={(scrollY) => {
-              scrollRef.current.scrollTo({ y: scrollY - 15, animated: true });
+              scrollRef.current.scrollTo({
+                y: scrollY + scrollOffset + 15,
+                animated: true,
+              });
             }}
           />
           <RichToolbar
@@ -258,7 +427,7 @@ export default function SessionDetailsScreen({ route, navigation }) {
               actions.alignCenter,
               actions.alignRight,
             ]}
-            selectedIconTint="#4c97ce"
+            selectedIconTint="#fbb730"
             iconGap={14}
           />
         </KeyboardAvoidingView>

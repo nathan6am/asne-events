@@ -13,7 +13,7 @@ import { separateEventsByMonth } from "../util/dataSort";
 import { getOrdinalRange } from "../util/dateUtil";
 import { ActivityIndicator } from "react-native-paper";
 import Loading from "../components/Loading";
-
+import Error from "../components/Error";
 function EventSections({ sections, refetch, isLoading, toDashboard }) {
   return (
     <SectionList
@@ -113,12 +113,18 @@ export default function EventListScreen({ navigation }) {
       {isLoading ? (
         <Loading />
       ) : (
-        <EventSections
-          sections={eventData}
-          refetch={refetch}
-          isLoading={isLoading}
-          toDashboard={toEventDashboard}
-        />
+        <>
+          {error ? (
+            <Error />
+          ) : (
+            <EventSections
+              sections={eventData}
+              refetch={refetch}
+              isLoading={isLoading}
+              toDashboard={toEventDashboard}
+            />
+          )}
+        </>
       )}
     </View>
   );

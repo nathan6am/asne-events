@@ -7,7 +7,7 @@ import {
   Ionicons,
 } from "react-native-vector-icons";
 
-const tagEnum = ["innovation", "panel", "keynote", "invite-only"];
+const tagEnum = ["innovation", "panel", "keynote", "invite-only", "technical"];
 function RenderTag({ tag }) {
   switch (tag) {
     case "innovation":

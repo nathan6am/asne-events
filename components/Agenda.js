@@ -148,7 +148,14 @@ function SessionList({
   );
 }
 
-export default function Agenda({ sessions, date, eventid, event, isMyAgenda }) {
+export default function Agenda({
+  sessions,
+  date,
+  eventid,
+  event,
+  isMyAgenda,
+  filters,
+}) {
   const dispatch = useDispatch();
   const localEventData = useSelector((state) => state.events).find(
     (event) => event.id === eventid
@@ -164,6 +171,30 @@ export default function Agenda({ sessions, date, eventid, event, isMyAgenda }) {
     });
     return filtered;
   };
+  const filterTags = (sessions, filters) => {
+    if (filters.all) {
+      return sessions;
+    } else {
+      return sessions.filter((session) =>
+        session.tags.every((tag) => {
+          switch (tag) {
+            case "keynote":
+              return filters.keynotes;
+            case "panel":
+              return filters.panels;
+            case "innovation":
+              return filters.innovation;
+            case "invite-only":
+              return filters.invite;
+            case "technical":
+              return filters.technical;
+            default:
+              return filters.other;
+          }
+        })
+      );
+    }
+  };
 
   const [sessionsToDisplay, setSessionsToDisplay] = useState(
     formatSessions(
@@ -176,23 +207,29 @@ export default function Agenda({ sessions, date, eventid, event, isMyAgenda }) {
     if (isMyAgenda) {
       setSessionsToDisplay(
         formatSessions(
-          filterMyAgenda(
-            sessions.filter((session) => {
-              return isSameDay(session.startTime, date);
-            })
+          filterTags(
+            filterMyAgenda(
+              sessions.filter((session) => {
+                return isSameDay(session.startTime, date);
+              })
+            ),
+            filters
           )
         )
       );
     } else {
       setSessionsToDisplay(
         formatSessions(
-          sessions.filter((session) => {
-            return isSameDay(session.startTime, date);
-          })
+          filterTags(
+            sessions.filter((session) => {
+              return isSameDay(session.startTime, date);
+            }),
+            filters
+          )
         )
       );
     }
-  }, [mySessions, isMyAgenda, sessions]);
+  }, [mySessions, isMyAgenda, sessions, filters]);
 
   const addItem = (sessionid) => {
     dispatch(addToAgenda(eventid, sessionid));
@@ -202,7 +239,7 @@ export default function Agenda({ sessions, date, eventid, event, isMyAgenda }) {
     dispatch(removeFromAgenda(eventid, sessionid));
   };
   return (
-    <View>
+    <View style={{ paddingBottom: 16 }}>
       <SessionList
         sessionData={sessionsToDisplay}
         mySessions={mySessions}

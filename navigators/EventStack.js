@@ -29,7 +29,17 @@ export default function EventStack({ route }) {
         options={{ title: route.params.nameShort }}
         initialParams={{ eventid: eventid }}
       />
-      <Stack.Screen name="Agenda" component={AgendaScreen} />
+      <Stack.Screen
+        name="Agenda"
+        component={AgendaScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: "#0b3d78",
+            elevation: 0,
+            shadowOpacity: 0,
+          },
+        }}
+      />
       <Stack.Screen name="Sponsors" component={SponsorScreen} />
       <Stack.Screen name="Venue" component={VenueDetailsScreen} />
       <Stack.Screen name="Venue Map" component={VenueMap} />

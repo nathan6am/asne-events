@@ -8,7 +8,10 @@ import {
   ScrollView,
   Pressable,
   Modal,
+  TouchableOpacity,
+  TouchableHighlight,
 } from "react-native";
+import { Ionicons } from "react-native-vector-icons";
 import { RectButton } from "react-native-gesture-handler";
 import Fuse from "fuse.js";
 
@@ -16,14 +19,29 @@ import React, { useState, useEffect, useRef } from "react";
 import { SearchBar } from "react-native-elements";
 import CachedImage from "react-native-expo-cached-image";
 import ReactNativeZoomableView from "@openspacelabs/react-native-zoomable-view/src/ReactNativeZoomableView";
+import * as Linking from "expo-linking";
 
+function getInitialOffest(dimensions, location) {
+  const centerHorizontal = Math.floor(dimensions.width / 2);
+  const offsetX = centerHorizontal - location.left;
+  const centerVertical = Math.floor(dimensions.height / 2);
+  const offsetY = centerVertical - location.top;
+  return {
+    x: offsetX,
+    y: offsetY,
+  };
+}
 function splitBooths(exhibitors) {
   let booths = [];
   exhibitors.forEach((exhibitor) => {
     exhibitor.booths.forEach((booth) => booths.push(booth));
   });
-  console.log(booths[0].location);
   return booths;
+}
+function parseUrl(url) {
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return "http://" + url;
+  } else return url;
 }
 function RenderBooth({ booth, highlight }) {
   return (
@@ -31,8 +49,10 @@ function RenderBooth({ booth, highlight }) {
       style={{
         width: 48,
         height: 48,
-        backgroundColor: highlight ? "blue" : "red",
+        backgroundColor: highlight ? "#fbb730" : "#f1f1f1",
         position: "absolute",
+        alignItems: "center",
+        justifyContent: "center",
         zIndex: 10,
         top: booth.location.top,
         left: booth.location.left,
@@ -44,6 +64,7 @@ function RenderBooth({ booth, highlight }) {
 }
 function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
   const booths = splitBooths(exhibitors);
+
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     if (exhibitor) {
@@ -72,7 +93,6 @@ function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
             style={{
               marginHorizontal: 4,
               width: "95%",
-              height: 400,
               elevation: 10,
               borderRadius: 8,
               backgroundColor: "white",
@@ -83,9 +103,11 @@ function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
                 height: 50,
                 backgroundColor: "#0b3d78",
                 alignItems: "center",
-                justifyContent: "center",
+                justifyContent: "space-between",
+                flexDirection: "row",
               }}
             >
+              <View style={{ height: 50, width: 50 }}></View>
               <Text
                 style={{
                   fontFamily: "sans-serif-medium",
@@ -96,21 +118,90 @@ function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
               >
                 Exhibitor Info
               </Text>
+              <TouchableOpacity
+                onPress={hide}
+                style={{
+                  height: 50,
+                  width: 50,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="close" color="white" size={28} />
+              </TouchableOpacity>
             </View>
-            <Text
+            <View
               style={{
-                fontFamily: "sans-serif-medium",
-                fontSize: 18,
+                borderBottomWidth: 2,
+                borderColor: "#f1f1f1",
                 padding: 8,
               }}
             >
-              {exhibitor.name}
-            </Text>
-            <View style={{ height: 300 }}>
+              <Text
+                style={{
+                  fontFamily: "sans-serif-medium",
+                  fontSize: 18,
+                }}
+              >
+                {exhibitor.name}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  marginTop: 4,
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons name="md-location" />
+                <Text>
+                  {exhibitor.booths.map((booth) => booth.boothCd).join(", ")}
+                </Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              onPress={() => {
+                if (exhibitor.url) {
+                  Linking.openURL(parseUrl(exhibitor.url));
+                }
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  padding: 8,
+                  paddingVertical: 16,
+                  alignItems: "center",
+                }}
+              >
+                <Ionicons
+                  name="md-open-outline"
+                  size={18}
+                  style={{ marginRight: 8 }}
+                />
+                <Text>Exhibitor Website</Text>
+              </View>
+            </TouchableOpacity>
+            <View style={{ borderTopWidth: 2, borderColor: "#f1f1f1" }}></View>
+            <View
+              style={{
+                height: 300,
+                borderBottomEndRadius: 8,
+                borderBottomStartRadius: 8,
+              }}
+            >
               <ReactNativeZoomableView
                 bindToBorders={true}
                 panBoundaryPadding={1200}
-                initialZoom={0.25}
+                initialZoom={0.5}
+                initialOffsetX={
+                  getInitialOffest(map.dimensions, exhibitor.booths[0].location)
+                    .x
+                }
+                initialOffsetY={
+                  getInitialOffest(map.dimensions, exhibitor.booths[0].location)
+                    .y
+                }
                 minZoom={0.3}
                 maxZoom={2.0}
               >
@@ -121,7 +212,13 @@ function ExhibitorModal({ exhibitor, hide, exhibitors, map }) {
                   }}
                 >
                   {booths.map((booth) => (
-                    <RenderBooth booth={booth} key={booth.boothCd} />
+                    <RenderBooth
+                      booth={booth}
+                      key={booth.boothCd}
+                      highlight={exhibitor.booths.some(
+                        (item) => item.boothCd === booth.boothCd
+                      )}
+                    />
                   ))}
                   <CachedImage
                     style={{ width: "100%", height: "100%" }}
@@ -287,7 +384,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     height: 60,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
+    marginBottom: 2,
     borderColor: "#f1f1f1",
     paddingHorizontal: 8,
   },
